@@ -42,7 +42,7 @@ export const ConfigSchema = z.object({
     helmetEnabled: z.boolean().default(true),
   }),
   development: z.object({
-    nodeEnv: z.enum(['development', 'production', 'test']).default('development'),
+    nodeEnv: z.enum(['development', 'production', 'test']).catch('production'),
     debug: z.boolean().default(false),
   }),
 });
