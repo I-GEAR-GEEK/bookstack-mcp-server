@@ -21,6 +21,19 @@
 
 import { BookStackMCPServer } from './server';
 
+// Minimal Cloudflare Workers type declarations — avoids requiring @cloudflare/workers-types as a devDependency
+interface DurableObjectId { toString(): string }
+interface DurableObjectStub { fetch(request: Request): Promise<Response> }
+interface DurableObjectNamespace {
+  newUniqueId(): DurableObjectId;
+  idFromString(id: string): DurableObjectId;
+  get(id: DurableObjectId): DurableObjectStub;
+}
+interface DurableObjectState {
+  id: DurableObjectId;
+  waitUntil(promise: Promise<unknown>): void;
+}
+
 export interface Env {
   BOOKSTACK_BASE_URL: string;
   BOOKSTACK_API_TOKEN: string;
