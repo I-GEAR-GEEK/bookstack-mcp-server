@@ -144,21 +144,27 @@ export class MCPSession {
     const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
     const writer = writable.getWriter();
 
-    this.transport = new SSETransport(writer);
-    setProcessEnv(this.env);
-    this.mcpServer = new BookStackMCPServer();
+    // Run async so constructor errors don't crash the Worker with a 1101
+    (async () => {
+      try {
+        setProcessEnv(this.env);
+        this.mcpServer = new BookStackMCPServer();
+        this.transport = new SSETransport(writer);
+        await this.mcpServer.connectTransport(this.transport);
 
-    this.mcpServer.connectTransport(this.transport)
-      .then(async () => {
-        // Tell the client where to POST messages
         const sessionId = this.state.id.toString();
         await writer.write(
           this.enc.encode(`event: endpoint\ndata: /messages?sessionId=${sessionId}\n\n`)
         );
-        // Send periodic pings to keep the connection alive
         this.schedulePing(writer);
-      })
-      .catch((err: Error) => writer.abort(err));
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        try {
+          await writer.write(this.enc.encode(`event: error\ndata: ${JSON.stringify({ message: msg })}\n\n`));
+          await writer.close();
+        } catch { /* stream already closed */ }
+      }
+    })();
 
     return new Response(readable, {
       headers: {
