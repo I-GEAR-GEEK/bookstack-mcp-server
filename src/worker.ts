@@ -43,6 +43,7 @@ export interface Env {
   RATE_LIMIT_REQUESTS_PER_MINUTE?: string;
   RATE_LIMIT_BURST_LIMIT?: string;
   LOG_LEVEL?: string;
+  MCP_AUTH_TOKEN?: string;
   // Durable Object binding (declared in wrangler.toml)
   MCP_SESSIONS: DurableObjectNamespace;
 }
@@ -102,6 +103,22 @@ const CORS_HEADERS: Record<string, string> = {
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
+
+function checkAuth(request: Request, env: Env): Response | null {
+  if (!env.MCP_AUTH_TOKEN) {
+    console.warn('[auth] MCP_AUTH_TOKEN not set — auth disabled');
+    return null;
+  }
+  const header = request.headers.get('Authorization') ?? '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : '';
+  if (token !== env.MCP_AUTH_TOKEN) {
+    return Response.json(
+      { error: 'Unauthorized', message: 'Valid Bearer token required' },
+      { status: 401, headers: CORS_HEADERS }
+    );
+  }
+  return null;
+}
 
 function setProcessEnv(env: Omit<Env, 'MCP_SESSIONS'>): void {
   // Guard every assignment — assigning undefined writes the string "undefined" to process.env
@@ -211,6 +228,32 @@ export default {
     if (url.pathname === '/health') {
       return Response.json({ status: 'ok' }, { headers: CORS_HEADERS });
     }
+
+    // ── OAuth 2.0 client credentials (for Claude.ai web connector UI) ───────
+    if (url.pathname === '/oauth/token' && request.method === 'POST') {
+      if (!env.MCP_AUTH_TOKEN) {
+        return Response.json({ error: 'server_error', error_description: 'Auth not configured' }, { status: 500, headers: CORS_HEADERS });
+      }
+      let clientSecret = '';
+      const contentType = request.headers.get('Content-Type') ?? '';
+      if (contentType.includes('application/x-www-form-urlencoded')) {
+        const text = await request.text();
+        clientSecret = new URLSearchParams(text).get('client_secret') ?? '';
+      } else {
+        const body = await request.json() as Record<string, string>;
+        clientSecret = body.client_secret ?? '';
+      }
+      if (clientSecret !== env.MCP_AUTH_TOKEN) {
+        return Response.json({ error: 'invalid_client', error_description: 'Invalid client_secret' }, { status: 401, headers: CORS_HEADERS });
+      }
+      return Response.json(
+        { access_token: env.MCP_AUTH_TOKEN, token_type: 'bearer', expires_in: 315360000 },
+        { headers: CORS_HEADERS }
+      );
+    }
+
+    const authError = checkAuth(request, env);
+    if (authError) return authError;
 
     // ── SSE transport (Claude Desktop) ─────────────────────────────────────
     if (url.pathname === '/sse' && request.method === 'GET') {
