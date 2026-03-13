@@ -104,8 +104,9 @@ const CORS_HEADERS: Record<string, string> = {
 };
 
 function setProcessEnv(env: Omit<Env, 'MCP_SESSIONS'>): void {
-  process.env.BOOKSTACK_BASE_URL = env.BOOKSTACK_BASE_URL;
-  process.env.BOOKSTACK_API_TOKEN = env.BOOKSTACK_API_TOKEN;
+  // Guard every assignment — assigning undefined writes the string "undefined" to process.env
+  if (env.BOOKSTACK_BASE_URL) process.env.BOOKSTACK_BASE_URL = env.BOOKSTACK_BASE_URL;
+  if (env.BOOKSTACK_API_TOKEN) process.env.BOOKSTACK_API_TOKEN = env.BOOKSTACK_API_TOKEN;
   if (env.BOOKSTACK_TIMEOUT) process.env.BOOKSTACK_TIMEOUT = env.BOOKSTACK_TIMEOUT;
   if (env.SERVER_NAME) process.env.SERVER_NAME = env.SERVER_NAME;
   if (env.SERVER_VERSION) process.env.SERVER_VERSION = env.SERVER_VERSION;
