@@ -314,8 +314,8 @@ export class BookStackMCPServer {
   }
 }
 
-// Start server if run directly
-if (require.main === module) {
+// Start server if run directly (Node.js only — skipped in Cloudflare Workers)
+if (typeof module !== 'undefined' && require.main === module) {
   const server = new BookStackMCPServer();
   server.start().catch((error) => {
     console.error('Failed to start server:', error);

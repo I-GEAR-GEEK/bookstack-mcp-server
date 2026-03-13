@@ -22,7 +22,6 @@ export interface Env {
   RATE_LIMIT_REQUESTS_PER_MINUTE?: string;
   RATE_LIMIT_BURST_LIMIT?: string;
   LOG_LEVEL?: string;
-  NODE_ENV?: string;
 }
 
 // Minimal JSON-RPC message shape
@@ -90,7 +89,7 @@ function setProcessEnv(env: Env): void {
   if (env.RATE_LIMIT_REQUESTS_PER_MINUTE) process.env.RATE_LIMIT_REQUESTS_PER_MINUTE = env.RATE_LIMIT_REQUESTS_PER_MINUTE;
   if (env.RATE_LIMIT_BURST_LIMIT) process.env.RATE_LIMIT_BURST_LIMIT = env.RATE_LIMIT_BURST_LIMIT;
   if (env.LOG_LEVEL) process.env.LOG_LEVEL = env.LOG_LEVEL;
-  if (env.NODE_ENV) process.env.NODE_ENV = env.NODE_ENV;
+  // Note: process.env.NODE_ENV is a compile-time constant in esbuild — do not assign
 }
 
 // Cached server instance (reused across requests within the same isolate)
