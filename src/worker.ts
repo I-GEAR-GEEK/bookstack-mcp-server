@@ -214,8 +214,13 @@ export default {
 
     // ── SSE transport (Claude Desktop) ─────────────────────────────────────
     if (url.pathname === '/sse' && request.method === 'GET') {
-      const id = env.MCP_SESSIONS.newUniqueId();
-      return env.MCP_SESSIONS.get(id).fetch(request);
+      try {
+        const id = env.MCP_SESSIONS.newUniqueId();
+        return await env.MCP_SESSIONS.get(id).fetch(request);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return Response.json({ error: msg }, { status: 500, headers: CORS_HEADERS });
+      }
     }
 
     if (url.pathname === '/messages' && request.method === 'POST') {
