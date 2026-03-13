@@ -247,6 +247,13 @@ export class BookStackMCPServer {
   }
 
   /**
+   * Connect a custom transport (used for Cloudflare Workers HTTP transport)
+   */
+  async connectTransport(transport: unknown): Promise<void> {
+    await this.server.connect(transport as Parameters<typeof this.server.connect>[0]);
+  }
+
+  /**
    * Start the MCP server
    */
   async start(): Promise<void> {

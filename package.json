@@ -16,6 +16,9 @@
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write src/**/*.ts",
     "clean": "rimraf dist",
+    "worker:dev": "wrangler dev src/worker.ts",
+    "worker:deploy": "wrangler deploy",
+    "worker:tail": "wrangler tail",
     "docker:build": "docker build -t bookstack-mcp-server .",
     "docker:run": "docker run -p 3000:3000 bookstack-mcp-server"
   },
@@ -32,7 +35,7 @@
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "axios": "^1.6.0",
+    "axios": "^1.7.0",
     "zod": "^3.22.4",
     "winston": "^3.10.0",
     "dotenv": "^16.3.1",
@@ -60,7 +63,8 @@
     "typescript": "^5.2.2",
     "rimraf": "^5.0.5",
     "supertest": "^6.3.3",
-    "@types/supertest": "^2.0.12"
+    "@types/supertest": "^2.0.12",
+    "wrangler": "^3.0.0"
   },
   "engines": {
     "node": ">=18.0.0",

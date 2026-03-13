@@ -1,5 +1,4 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError, AxiosRequestConfig } from 'axios';
-import { Agent } from 'https';
 import { Config } from '../config/manager';
 import { Logger } from '../utils/logger';
 import { ErrorHandler } from '../utils/errors';
@@ -78,18 +77,11 @@ export class BookStackClient implements BookStackAPIClient {
     this.errorHandler = errorHandler;
     this.rateLimiter = new RateLimiter(config.rateLimit);
 
-    // Create HTTP agent for connection pooling
-    const httpsAgent = new Agent({
-      keepAlive: true,
-      maxSockets: 10,
-      timeout: config.bookstack.timeout,
-    });
-
-    // Initialize Axios client
+    // Initialize Axios client with fetch adapter (compatible with CF Workers and Node.js 18+)
     this.client = axios.create({
       baseURL: config.bookstack.baseUrl,
       timeout: config.bookstack.timeout,
-      httpsAgent,
+      adapter: 'fetch',
       headers: {
         'Authorization': `Token ${config.bookstack.apiToken}`,
         'Content-Type': 'application/json',
