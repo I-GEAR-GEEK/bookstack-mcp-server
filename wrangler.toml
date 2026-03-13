@@ -12,3 +12,13 @@ LOG_LEVEL = "info"
 BOOKSTACK_TIMEOUT = "30000"
 RATE_LIMIT_REQUESTS_PER_MINUTE = "60"
 RATE_LIMIT_BURST_LIMIT = "10"
+
+# Durable Objects — required for SSE (Claude Desktop) support.
+# NOTE: Durable Objects require a Workers Paid plan ($5/month).
+[[durable_objects.bindings]]
+name = "MCP_SESSIONS"
+class_name = "MCPSession"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["MCPSession"]
